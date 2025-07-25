@@ -1,6 +1,4 @@
 import json
-import re
-import time
 import traceback
 from smolagents import (
     Model,
@@ -32,11 +30,10 @@ def extract_answer(original_task: str, inner_messages, model: Model, conv_num:in
             "content": [
                 {
                     "type": "text",
-                    "text": f"""The Agent team has finished their investigation. I will provide a part of their discussion transcript, the answer may lie in the conversation.
+                    "text": f"""The Agent team has finished their investigation. I will provide you a part of their discussion history, the answer may lie in the conversation.
 
                     ## Task:
-                    Please analyze the history conversation and get the final answer of the question. Please ensure that the answer is correct and reasonable.
-                    The original question is: {original_task}.
+                    Please analyze the history conversation, then summurize and extract the specific FINAL ANSWER of the question. Please ensure that the answer is correct and reasonable.
 
                     ## Original Question:
                     {original_task}
@@ -51,7 +48,7 @@ def extract_answer(original_task: str, inner_messages, model: Model, conv_num:in
                     ## Answer Formatting Rules:
                     - Results: Only return the concise core answer required by the question stem without any redundant description.
                     - Numbers: Use digits only (e.g., "42", not "forty-two"), no commas, no units (e.g. $, %) unless specifically requested.
-                    - Plain Text: Use exact text without numbers, avoid articles/abbreviations unless specified, no punctuation at the end.
+                    - Plain Text: Use exact tex without numbers, avoid articles/abbreviations unless specified, no punctuation at the end.
                     - Lists: Comma-separated, apply number/text rules to each element.
                     - Units: Pay close attention to the units of measurement specified in the question if necessary. (units: e.g. per 1000, per million)
                     - Precision: Ensure the numerical answer matches the specified rounding precision in the question. (e.g. thousandths, two decimal places)
@@ -60,15 +57,19 @@ def extract_answer(original_task: str, inner_messages, model: Model, conv_num:in
                     ## Response Rules:
                     - Report your thoughts, and finish your answer with the following template: FINAL ANSWER: [YOUR FINAL ANSWER].
                     - Your FINAL ANSWER should be a number OR as few words as possible OR a comma separated list of numbers and/or strings.
-                    - If uncertain or information is insufficient: State "Unable to determine"
-
+                    - If you are asked for a number, don't use comma to write your number neither use units such as $ or percent sign unless specified otherwise.
+                    - If you are asked for a string, don't use articles, codes, neither abbreviations (e.g. for cities), and write the digits in plain text unless specified otherwise.
+                    - If you are asked for a comma separated list, apply the above rules depending of whether the element to be put in the list is a number or a string.
+                    - DO NOT add `Thoughts` to the FINAL ANSWER template, the final answer should be specific.
+                    
                     ## Discussion Hisotry:
                     """,
                 }
             ],
         }
     )
-    if conv_num==0:
+
+    if conv_num==0 or conv_num+3>=len(inner_messages):
         start=0
     else:
         start=-3-conv_num
@@ -88,7 +89,7 @@ def extract_answer(original_task: str, inner_messages, model: Model, conv_num:in
             "role": MessageRole.USER,
             "content": [{
                     "type": "text",
-                    "text": "Please analyze the provided information and extract the relevant answer."
+                    "text": "Start your answer extraction task."
                 }],
             }
     )
@@ -96,12 +97,7 @@ def extract_answer(original_task: str, inner_messages, model: Model, conv_num:in
 
     final_answer = None
 
-    match = re.search(r"FINAL ANSWER:\s*([\s\S]+?)(?:\n\n|\Z)", response)
-    if match:
-        final_answer = match.group(1).strip()
-    else:
-        final_answer = response.split("FINAL ANSWER: ")[-1].strip()
-
+    final_answer = response.split("FINAL ANSWER: ")[-1].strip()
 
     return final_answer
 

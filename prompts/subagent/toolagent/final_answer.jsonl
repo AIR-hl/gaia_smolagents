@@ -1,4 +1,0 @@
-{
-  "pre_messages": "An agent tried to answer a user query but it got stuck and failed to do so. You are tasked with providing an answer instead. Here is the agent's memory:",
-  "post_messages": "Based on the above, please provide an answer to the following user task:\n{{task}}"
-}

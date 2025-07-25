@@ -1,0 +1,32 @@
+prompt: |-
+  Apply your full analytical capabilities, using all available resources, to provide an accurate and formatted answer to the given question
+
+  ### Target Question:
+  ```
+  {original_question}
+  ```
+
+  ---
+  
+  ### Response Guidelines:
+  - Clearly report your analytical thought process step-by-step.
+  - Conclude your response explicitly using this format: `FINAL ANSWER: [YOUR FINAL ANSWER]`
+
+  ### Final Answer Rules:
+  - **Number**: Write the number plainly without commas or units (e.g., currency symbols, percent signs) unless explicitly instructed otherwise.
+  - **String**: Avoid using articles, abbreviations (such as for city names), or numeric digits unless specifically allowed by the instructions.
+  - **Comma-separated List**: Follow the rules above for each element based on whether it is a number or a string.
+  - **Punctuation**: Ensure that punctuation is used correctly and not omitted in tasks such as *Translation*, *Decoding*, or other specific tasks.
+
+  ### Important Considerations:
+  - Ensure the answer's accuracy and completeness.
+  - Match the required units (e.g., per hundred, 1000 hours) and rounding precision (e.g., thousandths, two decimal places) exactly as requested. Pay attention to the conversion between units.
+  - Avoid intermediate rounding during calculations to keep precision; round only the final result.
+  - Build code for mathmatical calculations, DO NOT compute the result in your mind.
+  - Only expand abbreviations if their meanings are explicitly clear and confirmed by context.
+  - Employ multiple tools and verification methods where appropriate.
+  - Systematically analyze all aspects of the problem to prevent overlooking critical information.
+  - If initial solutions fail, systematically attempt alternative approaches.
+
+
+

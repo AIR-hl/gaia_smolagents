@@ -1,7 +1,6 @@
 import argparse
 import glob
 import os
-from IPython.display import display
 
 import datasets
 import pandas as pd
@@ -9,7 +8,7 @@ from dotenv import load_dotenv
 from huggingface_hub import login
 import re
 from collections import Counter
-from scripts.judge import check_close_call, question_scorer
+from src.scorer import check_close_call, question_scorer
 
 # 设置 pandas 显示选项，确保终端中完整输出
 pd.set_option("display.max_rows", None)

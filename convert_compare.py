@@ -2,7 +2,7 @@ import argparse
 import json
 
 import datasets
-from scripts.judge import question_scorer
+from src.scorer import question_scorer
 import os
 
 def parse_args():

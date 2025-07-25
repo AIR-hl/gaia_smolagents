@@ -1,4 +1,0 @@
-{
-    "task": "You're a helpful agent named '{{name}}'.\nYou have been submitted this task by your manager.\n---\nTask:\n{{task}}\n---\nYou're helping your manager solve a wider task: so make sure to not provide a one-line answer, but give as much information as possible to give them a clear understanding of the answer.\n\nYour final_answer WILL HAVE to contain these parts:\n### 1. Task outcome (short version):\n### 2. Task outcome (extremely detailed version):\n### 3. Additional context (if relevant):\n\nPut all these in your final_answer tool, everything that you do not pass as an argument to final_answer will be lost.\nAnd even if your task resolution is not successful, please return as much context as possible, so that your manager can act upon this feedback.",
-    "report": "Here is the final answer from your managed agent '{{name}}':\n{{final_answer}}"
-}
