@@ -46,9 +46,10 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--concurrency", type=int, default=10)
     parser.add_argument("--model_id", type=str, default="o4-mini")
-    parser.add_argument("--run_name", type=str, default="gaia_o4-mini_search_4o_vqa")
+    parser.add_argument("--extract_model_id", type=str, default="o4-mini")    
+    parser.add_argument("--run_name", type=str, default="gaia_run")
     parser.add_argument("--split", type=str, default="validation")
-    parser.add_argument("--extract_model_id", type=str, default="o4-mini")
+    parser.add_argument("--use_phoenix", action="store_true", default=False)
     return parser.parse_args()
 
 os.environ['SERPAPI_API_KEY'] = os.getenv("SERPAPI_API_KEY", "")
@@ -240,8 +241,9 @@ def main():
     args = parse_args()
     project_root = Path(__file__).parent.resolve()
     
-    register(project_name=args.run_name)
-    SmolagentsInstrumentor().instrument()
+    if args.use_phoenix:
+        register(project_name=args.run_name)
+        SmolagentsInstrumentor().instrument()
 
     answers_file_path = project_root / f"output/{args.split}/{args.run_name}.jsonl"
     temp_answer_path = project_root / f"output/cache/{args.split}/{args.run_name}.jsonl"

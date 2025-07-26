@@ -1,0 +1,17 @@
+prompt: |-
+  You have been assigned the following task. Please provide the final answer with absolute precision, following all formatting rules.
+
+  ### Target Question:
+  ```
+  {original_question}
+  ```
+
+  ---
+  
+  ### Critical Final Answer Format Rules:
+  - **Accuracy is Paramount**: Your final answer must be perfectly accurate and formatted. Even a single misplaced character, comma, or incorrect unit will result in failure.
+  - **Number Formatting**: Do not use commas as thousands separators (e.g., write 10000, not 10,000).
+  - **String Formatting**: Do not use abbreviations unless explicitly instructed.
+  - **List Formatting**: For comma-separated lists, ensure there are no trailing commas and follow the rules for each element.
+  - **Precision**: Adhere strictly to any rounding instructions (e.g., "to the nearest thousandth"). Perform all calculations at full precision and only round the final result.
+  - **Final Answer Wrapper**: Conclude your response *only* with the final answer, delivered by the `final_answer` tool. For example: `final_answer("The Answer")`.

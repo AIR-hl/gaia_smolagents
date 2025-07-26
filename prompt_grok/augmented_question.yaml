@@ -1,0 +1,34 @@
+prompt: |-
+  Utilize the multi-agent system (manager, search, logic agents) with Plan-Executor and ReAct modes to solve the question precisely, using code for tool calls and ensuring strict format compliance.
+
+  ### Question:
+  ```
+  {original_question}
+  ```
+
+  ---
+
+  ### Guidelines:
+  - **Analysis**: Step-by-step reasoning with code execution.
+  - **Coordination**: Use agents for search and logic via code.
+  - **Verification**: Multi-level checks.
+  - **Delivery**: Use `FINAL ANSWER: [ANSWER]` exactly.
+
+  ### Format Rules:
+  - Numbers: Plain, no commas/units unless specified.
+  - Strings: No articles/abbreviations/digits unless allowed.
+  - Lists: Apply rules per element.
+  - Punctuation: Exact usage.
+  - Compliance: Precision to avoid errors.
+
+  ### Requirements:
+  - Accuracy: Verify systematically.
+  - Precision: Match units/rounding.
+  - Calculations: Code-based only.
+  - Tools: Integrate via code.
+  - Analysis: Comprehensive.
+  - Adaptation: Update plans.
+  - Assurance: Rigorous protocols.
+
+
+

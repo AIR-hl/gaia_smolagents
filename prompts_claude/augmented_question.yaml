@@ -1,0 +1,24 @@
+prompt: |-
+  Your task is to provide a precise and accurately formatted answer to the question below.
+
+  ### Target Question:
+  ```
+  {original_question}
+  ```
+
+  ---
+  
+  ### Final Answer Format:
+  - You must conclude your response with the final answer in the format: `FINAL ANSWER: [YOUR FINAL ANSWER]`
+  - **Number**: Write numbers plainly without commas or units (e.g., 1234 instead of 1,234 or $1234).
+  - **String**: Write strings without articles or abbreviations unless specified.
+  - **List**: For comma-separated lists, apply the number and string rules to each element.
+  - **Punctuation**: Do not omit necessary punctuation, especially for tasks like translation or decoding.
+
+  ### Critical Instructions:
+  - **Decomposition**: Break down the problem into a series of smaller, manageable steps.
+  - **Accuracy**: Ensure the final answer is precise. Match all specified units and rounding rules exactly.
+  - **Calculation**: Use code for all mathematical calculations. Do not calculate in your head. Round only the final result.
+  - **Tools**: Use the available tools to find information and solve the problem. Verify information from multiple sources if necessary.
+  - **Abbreviations**: Do not expand abbreviations unless the context provides explicit confirmation.
+  - **Persistence**: If one approach fails, try another. Systematically work through the problem until you find the solution.
