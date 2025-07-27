@@ -259,7 +259,8 @@ def main():
                 exist_task_ids.append(json.loads(line)["task_id"])
 
     eval_ds = load_gaia_dataset(project_root / "data/gaia", args.split)
-    tasks_to_run = [record for record in eval_ds if record["task_id"] =="7bd855d8-463d-4ed5-93ca-5fe35145f733"]
+    task_to_run=eval_ds.to_list()
+    # tasks_to_run = [record for record in eval_ds if record["task_id"] =="7bd855d8-463d-4ed5-93ca-5fe35145f733"]
 
     print(f"🎯 Running {len(tasks_to_run)} tasks. Results will be saved to: {answers_file_path}")
     
