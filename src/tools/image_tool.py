@@ -5,6 +5,9 @@ import requests
 import os
 import textwrap
 from src.tools.download_tool import download_file
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 @tool
 def image_parse_tool(file_path: str, question: Optional[str | None] = None) -> str:
@@ -103,9 +106,9 @@ Please analyze the image carefully and provide accurate caption based on followi
         }    
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer 64268e2b-188f-4e86-9b2a-8542ba3849c8"
+            "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"
         }
-        response = requests.post("http://gpt-proxy.jd.com/v1/chat/completions", headers=headers, json=payload)
+        response = requests.post(os.getenv("OPENAI_BASE_URL"), headers=headers, json=payload)
         response.raise_for_status()
         
         response_json = response.json()
