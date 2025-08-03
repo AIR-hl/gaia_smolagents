@@ -2,10 +2,9 @@
 
 This project implements a sophisticated multi-agent system to tackle complex reasoning and task-solving challenges, specifically targeting the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA). It leverages the `smolagents` library to create a team of specialized AI agents that collaborate to answer questions and complete tasks.
 
-
 <div align="center">
-  <img src="image/readme/Architecture.svg" alt="Architecture Diagram" width="49.5%" height="400" style="display: inline-block; margin-right: 2%; object-fit: contain;">
-  <img src="image/readme/Execution Loop.svg" alt="Execution Loop Diagram" width="49.5%" height="400" style="display: inline-block; object-fit: contain;">
+  <img src="image/readme/Architecture.png" alt="Architecture Diagram" height="400">
+  <img src="image/readme/Execution_Loop.png" alt="Execution Loop Diagram" height="400">
 </div>
 
 The core architecture follows a manager-worker pattern:
