@@ -2,21 +2,14 @@
 
 This project implements a sophisticated multi-agent system to tackle complex reasoning and task-solving challenges, specifically targeting the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA). It leverages the `smolagents` library to create a team of specialized AI agents that collaborate to answer questions and complete tasks.
 
-<div style="display: flex; justify-content: space-between; align-items: stretch; margin: 20px 0; height: 400px;">
-  <div style="flex: 1; margin-right: 10px; display: flex; align-items: center;">
-    <img src="image/readme/Architecture.svg" alt="Architecture Diagram" style="width: 100%; height: 100%; object-fit: contain; max-width: 100%;">
-  </div>
-  <div style="flex: 1; margin-left: 10px; display: flex; align-items: center;">
-    <img src="image/readme/Execution Loop.svg" alt="Execution Loop Diagram" style="width: 100%; height: 100%; object-fit: contain; max-width: 100%;">
-  </div>
-</div>
+![1753855923486](image/readme/1753855923486.png)
 
 The core architecture follows a manager-worker pattern:
 
 - A **Manager Agent** oversees the entire process, breaking down complex questions into smaller, manageable sub-tasks.
 - A **Retrieval Expert Agent** specializes in gathering information from various sources, including web search, Wikipedia, Arxiv, and GitHub.
 - A **Logic Expert Agent** excels at programming, logical reasoning, and mathematical calculations, using the information provided to derive final answers.
-- A **Browser Expert Agent** excels at gathering web information through browser-use style with `playwright` mcp.
+
 
 ## ✨ Features
 

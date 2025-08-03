@@ -5,6 +5,7 @@ import logging
 import re
 from turtle import back
 from typing import Literal, Optional, Tuple, List, Dict, Union
+from typing_extensions import deprecated
 from uuid import uuid4
 from smolagents import Tool
 import requests
@@ -342,6 +343,7 @@ class BingSearchTool(Tool):
         return postprocessed_results, result_map
 
 
+@deprecated("Use IntegratedSearchTool_v2 instead")
 class IntegratedSearchTool(Tool):
     name = "web_search_tool"
     description = (
@@ -377,7 +379,7 @@ class IntegratedSearchTool(Tool):
             # Initialize search engines with error handling
             if engine=="google":
                 try:
-                    self.google_search = GoogleSearchTool(max_results=kwargs.get(f"num{1}", 10))
+                    self.google_search = GoogleSearchTool(max_results=kwargs.get(f"num{idx}", 10))
                     self.search_engines.append(("google", self.google_search))
                     logging.info("google search engine initialized successfully")
                 except Exception as e:
@@ -386,7 +388,7 @@ class IntegratedSearchTool(Tool):
                     
             elif engine in ["duckduckgo", "yandex", "yahoo", "auto"]:
                 try:
-                    self.duckduckgo_search = DuckDuckGoSearchTool(backend=engine, max_results=kwargs.get(f"num{1}", 10))
+                    self.duckduckgo_search = DuckDuckGoSearchTool(backend=engine, max_results=kwargs.get(f"num{idx}", 10))
                     self.search_engines.append((engine, self.duckduckgo_search))
                     logging.info(f"{engine} search engine initialized successfully")
                 except Exception as e:
@@ -395,7 +397,7 @@ class IntegratedSearchTool(Tool):
                     
             elif engine=="bing":
                 try:
-                    self.bing_search = BingSearchTool(max_results=kwargs.get(f"num{1}", 10))
+                    self.bing_search = BingSearchTool(max_results=kwargs.get(f"num{idx}", 10))
                     self.search_engines.append((engine, self.bing_search))
                     logging.info(f"{engine} search engine initialized successfully")
                 except Exception as e:
@@ -519,6 +521,80 @@ class IntegratedSearchTool(Tool):
             "results": formatted_results
         }
 
+class IntegratedSearchTool_v2(Tool):
+    name = "web_search_tool"
+    description = (
+        "Search the web using integrated search engine. Use it just like using Google search.\n"
+        "The output is a json dictionary with the following structure: {success, query, total_results, results: [{id, title, href, snippet}]}"
+    )
+    inputs = {
+        "query": {
+            "type": "string", 
+            "description": "The search query to perform."
+        },
+        "num_results": {
+            "type": "integer",
+            "description": "The number of results per page. Default: 10.",
+            "nullable": True,
+        },
+        "page": {
+            "type": "integer",
+            "description": "The page number to return. Default: 1.",
+            "nullable": True,
+        },
+    }
+    output_type = "any"
+
+    def __init__(self):
+        super().__init__()
+        self.ddgs = DDGS()
+
+    def forward(self, query: str, num_results: int | None = None, page: int | None = None) -> dict:
+        """Search and return formatted results."""
+        results_list, _ = self._search_internal(query, num_results, page)
+        
+        if isinstance(results_list, str):  # Error message
+            return {"success": False, "query": query, "total_results": 0, "results": [results_list]}
+        
+        return {
+            "success": True,
+            "query": query,
+            "total_results": len(results_list),
+            "results": results_list
+        }
+    
+    def _search_internal(self, query: str, num_results: int | None = None, page: int | None = 1) -> Tuple[Union[List[str], str], Dict[str, int]]:
+        """Internal search method that returns raw results and mapping."""
+        
+        try:
+            results = self.ddgs.text(query, max_results=num_results, page=page, backend="google, duckduckgo, yandex, bing, brave, yahoo, mojeek", safesearch="off", region="en-us")
+        except Exception as e:
+            return f"Search failed: {str(e)}", {}
+        
+        if len(results) == 0:
+            return f"No results found for query: '{query}'. Try a different query.", {}
+        
+        postprocessed_results = []
+        result_map = {}
+        
+        for idx, result in enumerate(results):
+            snippet = result.get('body', '')
+            # Clean up snippet
+            snippet = re.sub(r'\n+', '; ', snippet)
+            snippet = re.sub(r'\s+', ' ', snippet).strip()
+            if len(snippet) > 225:
+                truncated = snippet[:175]
+                last_space = truncated.rfind(' ')
+                if last_space > 0:
+                    snippet = truncated[:last_space] + '...'
+                else:
+                    snippet = truncated + '...'
+            result['id'] = idx
+            result['snippet'] = snippet
+            postprocessed_results.append(result)
+            result_map[result['title']] = idx
+            
+        return postprocessed_results, result_map
 
 if __name__ == "__main__":
     import os

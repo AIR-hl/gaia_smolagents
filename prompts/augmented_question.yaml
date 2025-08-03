@@ -1,5 +1,5 @@
 prompt: |-
-  Apply your full analytical capabilities, using all available resources, to provide an accurate and formatted answer to the given question
+  Apply your full analytical capabilities within the multi-agent system framework, using all available resources and strategic coordination, to provide an accurate and precisely formatted answer to the given question.
 
   ### Target Question:
   ```
@@ -8,25 +8,29 @@ prompt: |-
 
   ---
   
-  ### Response Guidelines:
-  - Clearly report your analytical thought process step-by-step.
-  - Conclude your response explicitly using this format: `FINAL ANSWER: [YOUR FINAL ANSWER]`
+  ### Strategic Response Guidelines:
+  - **Systematic Analysis**: Report your analytical thought process step-by-step with rigorous logical reasoning
+  - **Multi-Agent Coordination**: Leverage search agents for information retrieval and logic agents for computational analysis
+  - **Verification Protocol**: Implement multi-level validation and cross-verification of results
+  - **Final Answer Delivery**: Conclude your response explicitly using this format: `FINAL ANSWER: [YOUR FINAL ANSWER]`
 
-  ### Final Answer Rules:
-  - **Number**: Write the number plainly without commas or units (e.g., currency symbols, percent signs) unless explicitly instructed otherwise.
-  - **String**: Avoid using articles, abbreviations (such as for city names), or numeric digits unless specifically allowed by the instructions.
-  - **Comma-separated List**: Follow the rules above for each element based on whether it is a number or a string.
-  - **Punctuation**: Ensure that punctuation is used correctly and not omitted in tasks such as *Translation*, *Decoding*, or other specific tasks.
+  ### Critical Final Answer Format Rules:
+  - **Number Format**: Write numbers plainly without commas or units (e.g., currency symbols, percent signs) unless explicitly instructed otherwise
+  - **String Format**: Avoid using articles, abbreviations (such as for city names), or numeric digits unless specifically allowed by the instructions
+  - **List Format**: For comma-separated lists, follow the rules above for each element based on whether it is a number or a string
+  - **Punctuation Precision**: Ensure punctuation is used correctly and not omitted in tasks such as *Translation*, *Decoding*, or other specific tasks
+  - **Format Compliance**: Even a single punctuation mark error can cause incorrect evaluation - absolute precision is required
 
-  ### Important Considerations:
-  - Ensure the answer's accuracy and completeness.
-  - Match the required units (e.g., per hundred, 1000 hours) and rounding precision (e.g., thousandths, two decimal places) exactly as requested. Pay attention to the conversion between units.
-  - Avoid intermediate rounding during calculations to keep precision; round only the final result.
-  - Build code for mathmatical calculations, DO NOT compute the result in your mind.
-  - Only expand abbreviations if their meanings are explicitly clear and confirmed by context.
-  - Employ multiple tools and verification methods where appropriate.
-  - Systematically analyze all aspects of the problem to prevent overlooking critical information.
-  - If initial solutions fail, systematically attempt alternative approaches.
+  ### Strategic Problem-Solving Requirements:
+  - **Accuracy Assurance**: Ensure the answer's accuracy and completeness through systematic verification
+  - **Unit Precision**: Match required units (e.g., per hundred, 1000 hours) and rounding precision (e.g., thousandths, two decimal places) exactly as requested
+  - **Calculation Rigor**: Avoid intermediate rounding during calculations to maintain precision; round only the final result
+  - **Code-Based Computation**: Build code for mathematical calculations - DO NOT compute results mentally
+  - **Abbreviation Handling**: Only expand abbreviations if their meanings are explicitly clear and confirmed by context
+  - **Multi-Tool Integration**: Employ multiple tools and verification methods systematically
+  - **Comprehensive Analysis**: Systematically analyze all aspects of the problem to prevent overlooking critical information
+  - **Adaptive Strategy**: If initial solutions fail, systematically attempt alternative approaches with strategic plan updates
+  - **Quality Assurance**: Implement rigorous verification protocols to ensure solution accuracy and format compliance
 
 
 

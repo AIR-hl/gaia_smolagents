@@ -7,14 +7,16 @@ from datetime import datetime
 from pathlib import Path
 from time import sleep
 import traceback
+from mcp import StdioServerParameters
 from openinference.instrumentation import using_metadata
 from phoenix.otel import register
 from openinference.instrumentation.smolagents import SmolagentsInstrumentor
 import pkgutil
 from dotenv import load_dotenv
+from smolagents.mcp_client import MCPClient
 from src.extractor import run_extract
 from src.tools.arxiv_tool import ArxivWebSearchTool
-from src.tools.search_tool import IntegratedSearchTool
+from src.tools.search_tool import IntegratedSearchTool, IntegratedSearchTool_v2
 from src.tools.text_tool import text_parse_tool
 from src.tools.pdf_tool_v2 import PDFParseTool
 from src.tools.image_tool import image_parse_tool
@@ -32,7 +34,7 @@ from src.utils import load_gaia_dataset, append_answer, get_zip_files, load_prom
 from src.tools.wikipedia_tool import WikiSearchTool, WikiPageTool
 from tqdm import tqdm
 from rich.console import Console
-from smolagents.agents import CodeAgent
+from smolagents.agents import CodeAgent, ToolCallingAgent
 from smolagents.models import OpenAIServerModel
 from smolagents import PythonInterpreterTool, BASE_BUILTIN_MODULES
 from smolagents.local_python_executor import LocalPythonExecutor
@@ -46,10 +48,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--concurrency", type=int, default=10)
     parser.add_argument("--model_id", type=str, default="o4-mini")
-    parser.add_argument("--extract_model_id", type=str, default="o4-mini")    
     parser.add_argument("--run_name", type=str, default="gaia_run")
     parser.add_argument("--split", type=str, default="validation")
-    parser.add_argument("--use_phoenix", action="store_true", default=False)
+    parser.add_argument("--extract_model_id", type=str, default="o4-mini")
     return parser.parse_args()
 
 os.environ['SERPAPI_API_KEY'] = os.getenv("SERPAPI_API_KEY", "")
@@ -58,18 +59,20 @@ os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = os.getenv("PHOENIX_COLLECTOR_ENDPOINT
 os.environ["GITHUB_API_TOKEN"] = os.getenv("GITHUB_API_TOKEN", "")
 
 search_agent_steps = 60
-search_agent_plan_interval = 4
+search_agent_plan_interval = 5
+browser_agent_steps = 100
+browser_agent_plan_interval = 15
 code_agent_step = 60
-code_agent_plan_interval = 4
+code_agent_plan_interval = 5
 manager_agent_step = 80
-manager_agent_plan_interval = 5
+manager_agent_plan_interval = 4
 max_tokens = 200000
 extract_conv_num = 5
-SEARCH_ENGINE = ["google"]
-search_tool_func = IntegratedSearchTool(SEARCH_ENGINE, num0=8)
+SEARCH_ENGINE = ["bing"]
+# search_tool_func = IntegratedSearchTool(SEARCH_ENGINE, num0=10)
 
 ALL_SEARCH_TOOLS = [
-    search_tool_func,
+    IntegratedSearchTool_v2(),
     WikiSearchTool(),
     ArxivWebSearchTool(),
     GitHubRepoSearchTool(),
@@ -101,7 +104,18 @@ WEB_TOOLS = [
     final_answer,
 ]
 
-def create_agent_team(project_root: Path, logger=None, **kwargs):
+
+
+def create_agent_team(workspace_path: Path, logger=None, **kwargs):
+    project_root=workspace_path.parent.parent.parent
+    server_parameters = StdioServerParameters(
+        command="npx",
+        args=["-y", "@playwright/mcp@latest", "--viewport-size", "1920, 1080", "--output-dir", f"{str(workspace_path)}",  "--isolated"], # --isolated is used to create multiple browser instances
+        env={"UV_PYTHON": "3.11", **os.environ},
+    )
+    mcp_client = MCPClient(server_parameters)
+    BROWSWER_TOOLS=mcp_client.get_tools() 
+
     link_pool = LinkPool()
     crawler = SimpleCrawler(link_pool=link_pool)
     set_crawler_and_link_pool(crawler, link_pool)
@@ -110,8 +124,23 @@ def create_agent_team(project_root: Path, logger=None, **kwargs):
         BASE_BUILTIN_MODULES.append(module.name)
         BASE_BUILTIN_MODULES.append(f"{module.name}.*")
 
-    search_agent_description = "An expert in web retrieval and information gathering..."
-    code_agent_description = "An expert in programming, logical reasoning, and math..."
+    search_agent_description = "An expert in Web Retrieval and Information Gathering with specialized tools. Don't hesitate to delegate task to him with details"
+    code_agent_description = "An expert in Programming, Logical reasoning, and Math with special mode. Don't hesitate to delegate task to him with details"
+    browser_agent_description = "An expert in Browser Navigation and Web Interaction with capabilities in direct browser automation, dynamic content extraction, interactive web operations and so on."
+
+    browser_agent = CodeAgent(
+        model=kwargs['browser_model'],
+        tools=[*BROWSWER_TOOLS, *ALL_PARSING_TOOLS],
+        max_steps=browser_agent_steps,
+        verbosity_level=2,
+        planning_interval=browser_agent_plan_interval,
+        name="Browser_Expert",
+        description=browser_agent_description,
+        prompt_templates=load_prompt_template_from_yaml(str(project_root / "prompts/browser_agent/code_agent.yaml")),
+        logger=logger or AgentLogger(level=LogLevel.INFO),
+    )
+    if isinstance(browser_agent.python_executor, LocalPythonExecutor):
+        browser_agent.python_executor.static_tools = {"open": open}
 
     search_agent = CodeAgent(
         model=kwargs['search_model'],
@@ -122,7 +151,8 @@ def create_agent_team(project_root: Path, logger=None, **kwargs):
         name="Retrieval_Expert",
         description=search_agent_description,
         provide_run_summary=False,
-        prompt_templates=load_prompt_template_from_yaml(project_root / "prompts/search_agent/code_agent.yaml"),
+        prompt_templates=load_prompt_template_from_yaml(str(project_root / "prompts/search_agent/code_agent.yaml")),
+        managed_agents=[browser_agent],
         logger=logger or AgentLogger(level=LogLevel.INFO),
     )
     if isinstance(search_agent.python_executor, LocalPythonExecutor):
@@ -138,7 +168,7 @@ def create_agent_team(project_root: Path, logger=None, **kwargs):
         provide_run_summary=True,
         name="Logic_Expert",
         description=code_agent_description,
-        prompt_templates=load_prompt_template_from_yaml(project_root / "prompts/logic_agent/code_agent.yaml"),
+        prompt_templates=load_prompt_template_from_yaml(str(project_root / "prompts/logic_agent/code_agent.yaml")),
         logger=logger or AgentLogger(level=LogLevel.INFO),
     )
     if isinstance(code_agent.python_executor, LocalPythonExecutor):
@@ -151,7 +181,7 @@ def create_agent_team(project_root: Path, logger=None, **kwargs):
         verbosity_level=2,
         planning_interval=manager_agent_plan_interval,
         managed_agents=[search_agent, code_agent],
-        prompt_templates=load_prompt_template_from_yaml(project_root / "prompts/manage_agent/code_agent.yaml"),
+        prompt_templates=load_prompt_template_from_yaml(str(project_root / "prompts/manage_agent/code_agent.yaml")),
         logger=logger or AgentLogger(level=LogLevel.INFO),
     )
     if isinstance(manager_agent.python_executor, LocalPythonExecutor):
@@ -179,11 +209,12 @@ def run_agent(example: dict, run_name: str, answers_file: str, project_root: Pat
             agent_logger = AgentLogger(level=LogLevel.INFO, console=console)
 
             manager_model = OpenAIServerModel(model_id="anthropic.claude-sonnet-4-20250514-v1:0", api_base=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"), max_tokens=65535, timeout=100, client_kwargs={"max_retries": 3})
-            search_model = OpenAIServerModel(model_id="anthropic.claude-sonnet-4-20250514-v1:0", api_base=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"), max_tokens=65535, timeout=100, temperature=0.4, client_kwargs={"max_retries": 3})
-            code_model = OpenAIServerModel(model_id="o4-mini", api_base=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"), max_tokens=200000, timeout=100, reasoning_effort="high", client_kwargs={"max_retries": 3})
+            search_model = OpenAIServerModel(model_id="anthropic.claude-sonnet-4-20250514-v1:0", api_base=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"), max_tokens=65535, timeout=100, client_kwargs={"max_retries": 3})
+            code_model = OpenAIServerModel(model_id="anthropic.claude-sonnet-4-20250514-v1:0", api_base=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"), max_tokens=65535, timeout=100, client_kwargs={"max_retries": 3})
+            browser_model = OpenAIServerModel(model_id="anthropic.claude-sonnet-4-20250514-v1:0", api_base=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"), max_tokens=65535, timeout=100, client_kwargs={"max_retries": 3})
 
-            prompt_data = load_prompt_from_yaml(project_root / "prompts/augmented_question.yaml")
-            augmented_question = prompt_data.format(original_question=example["question"])
+            prompt_data = load_prompt_from_yaml(str(project_root / "prompts/augmented_question.yaml"))
+            augmented_question = str(prompt_data).format(original_question=example["question"])
 
             if example.get("file_name"):
                 file_path_str = str(example['file_name'])
@@ -191,7 +222,7 @@ def run_agent(example: dict, run_name: str, answers_file: str, project_root: Pat
                     unzipped_files = get_zip_files(file_path_str)
                     prompt_use_files = f"## ATTACHED FILE PATHS:\n{unzipped_files}\n\nThe attached zip file has been unzipped..."
                 else:
-                    prompt_use_files = f"\n## ATTACHED FILE PATH:\n{file_path_str}\n\nTo answer this question, you need to utilize the provided attached file..."
+                    prompt_use_files = f"\n## ATTACHED FILE PATH:\n{file_path_str}\n\nTo answer the question, you need to utilize the provided attached file."
                 augmented_question += prompt_use_files
 
             start_time = datetime.now()
@@ -200,7 +231,7 @@ def run_agent(example: dict, run_name: str, answers_file: str, project_root: Pat
             output, intermediate_steps, final_exception = None, [], None
             iteration_limit_exceeded = False
             
-            agent = create_agent_team(project_root, logger=agent_logger, manager_model=manager_model, search_model=search_model, code_model=code_model)
+            agent = create_agent_team(workspace_path, logger=agent_logger, manager_model=manager_model, search_model=search_model, code_model=code_model, browser_model=browser_model)
             with using_metadata({"task_id": task_id}):
                 for attempt in range(2):
                     try:
@@ -241,9 +272,8 @@ def main():
     args = parse_args()
     project_root = Path(__file__).parent.resolve()
     
-    if args.use_phoenix:
-        register(project_name=args.run_name)
-        SmolagentsInstrumentor().instrument()
+    # register(project_name=args.run_name)
+    # SmolagentsInstrumentor().instrument()
 
     answers_file_path = project_root / f"output/{args.split}/{args.run_name}.jsonl"
     temp_answer_path = project_root / f"output/cache/{args.split}/{args.run_name}.jsonl"
@@ -258,9 +288,9 @@ def main():
             for line in f:
                 exist_task_ids.append(json.loads(line)["task_id"])
 
-    eval_ds = load_gaia_dataset(project_root / "data/gaia", args.split)
-    task_to_run=eval_ds.to_list()
+    eval_ds = load_gaia_dataset(str(project_root / "data/gaia"), args.split)
     # tasks_to_run = [record for record in eval_ds if record["task_id"] =="7bd855d8-463d-4ed5-93ca-5fe35145f733"]
+    tasks_to_run = eval_ds.to_list()
 
     print(f"🎯 Running {len(tasks_to_run)} tasks. Results will be saved to: {answers_file_path}")
     
