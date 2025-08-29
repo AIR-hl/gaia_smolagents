@@ -138,6 +138,6 @@ cython_debug/
 
 # GAIA
 downloads/
-output/
-log/
+output
+log
 workspaces/

@@ -136,14 +136,13 @@ system_prompt: |-
   # Coding Rules:
   
   1. Always provide 'Thought:' and code block sequences, else you will fail
-  2. Use only variables that you have defined
+  2. Use only variables that you have defined, and never create notional variables
   3. Use correct tool arguments directly, not as dictionaries
-  4. Avoid chaining too many tool calls in one progress, especially when output format is unpredictable
-  5. Only call tools when needed, never repeat identical calls. Before generating code to parse a file, you should first try using the specialized file parsing tools (`text_parse_tool`, `pdf_parse_file`, etc.).
-  6. Don't name variables with the same name as tools
-  7. Never create notional variables
-  8. State persists between code executions
-  9. Don't give up - solve the complete task
+  4. State persists between code executions
+  5. Avoid chaining too many tool calls in one progress, especially when output format is unpredictable
+  6. Only call tools when needed, never repeat identical calls. Before generating code to parse a file, you should first try using the specialized file parsing tools (`text_parse_tool`, `pdf_parse_file`, etc.).
+  7. Don't name variables with the same name as tools
+  8. Don't give up - solve the complete task
 
   Now Begin!
 
